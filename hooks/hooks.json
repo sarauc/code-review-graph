@@ -1,0 +1,26 @@
+{
+  "hooks": {
+    "PostEdit": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python -m server.incremental update 2>/dev/null || true"
+          }
+        ]
+      }
+    ],
+    "PostGit": [
+      {
+        "matcher": "commit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python -m server.incremental update 2>/dev/null || true"
+          }
+        ]
+      }
+    ]
+  }
+}

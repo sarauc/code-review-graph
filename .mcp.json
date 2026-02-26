@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "code-review-graph": {
+      "command": "python",
+      "args": ["-m", "server.main"],
+      "cwd": "."
+    }
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "name": "code-review-graph",
+  "description": "Persistent incremental knowledge graph for token-efficient, context-aware code reviews with Claude Code",
+  "version": "1.0.0",
+  "author": {
+    "name": "Tirth"
+  },
+  "repository": "https://github.com/tirth/code-review-graph",
+  "license": "MIT",
+  "tags": ["code-review", "knowledge-graph", "incremental", "tree-sitter"]
+}
