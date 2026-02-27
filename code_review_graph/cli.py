@@ -130,6 +130,7 @@ def main() -> None:
 
     from .graph import GraphStore
     from .incremental import (
+        find_project_root,
         find_repo_root,
         full_build,
         get_db_path,
@@ -137,10 +138,15 @@ def main() -> None:
         watch,
     )
 
-    repo_root = Path(args.repo) if args.repo else find_repo_root()
-    if not repo_root:
-        logging.error("Not in a git repository. Run from a project directory or pass --repo.")
-        sys.exit(1)
+    if args.command == "update":
+        # update requires git for diffing
+        repo_root = Path(args.repo) if args.repo else find_repo_root()
+        if not repo_root:
+            logging.error("Not in a git repository. 'update' requires git for diffing.")
+            logging.error("Use 'build' for a full parse, or run 'git init' first.")
+            sys.exit(1)
+    else:
+        repo_root = Path(args.repo) if args.repo else find_project_root()
 
     db_path = get_db_path(repo_root)
     store = GraphStore(db_path)

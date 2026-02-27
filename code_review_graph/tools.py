@@ -19,7 +19,7 @@ from typing import Any
 from .embeddings import EmbeddingStore, embed_all_nodes, semantic_search
 from .graph import GraphStore, edge_to_dict, node_to_dict
 from .incremental import (
-    find_repo_root,
+    find_project_root,
     full_build,
     get_changed_files,
     get_db_path,
@@ -30,12 +30,7 @@ from .incremental import (
 
 def _get_store(repo_root: str | None = None) -> tuple[GraphStore, Path]:
     """Resolve repo root and open the graph store."""
-    root = Path(repo_root) if repo_root else find_repo_root()
-    if not root:
-        raise RuntimeError(
-            "Not inside a git repository. Please run from a project directory "
-            "or pass repo_root explicitly."
-        )
+    root = Path(repo_root) if repo_root else find_project_root()
     db_path = get_db_path(root)
     return GraphStore(db_path), root
 

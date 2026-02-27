@@ -56,6 +56,14 @@ def find_repo_root(start: Path | None = None) -> Optional[Path]:
     return None
 
 
+def find_project_root(start: Path | None = None) -> Path:
+    """Find the project root: git repo root if available, otherwise cwd."""
+    root = find_repo_root(start)
+    if root:
+        return root
+    return start or Path.cwd()
+
+
 def get_db_path(repo_root: Path) -> Path:
     """Determine the database path for a repository.
 
@@ -479,10 +487,7 @@ def main() -> None:
 
     logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
 
-    repo_root = Path(args.repo) if args.repo else find_repo_root()
-    if not repo_root:
-        logger.error("Not in a git repository")
-        return
+    repo_root = Path(args.repo) if args.repo else find_project_root()
 
     db_path = get_db_path(repo_root)
     store = GraphStore(db_path)
