@@ -30,6 +30,44 @@ import logging
 from pathlib import Path
 
 
+def _safe_path(path: Path) -> str:
+    """Return a space-free path, creating a symlink in ~/.local/share/crg/ if needed.
+
+    MCP clients (including Claude Code) can fail when paths contain spaces
+    (e.g. macOS iCloud: '~/Library/Mobile Documents/com~apple~CloudDocs/...').
+    This function detects that and transparently creates a symlink from a
+    space-free location so the MCP server starts reliably.
+    """
+    s = str(path)
+    if " " not in s:
+        return s
+
+    # Build a stable symlink name from the real path
+    import hashlib
+    slug = hashlib.sha256(s.encode()).hexdigest()[:12]
+    link_dir = Path.home() / ".local" / "share" / "crg" / "links"
+    link_dir.mkdir(parents=True, exist_ok=True)
+    link = link_dir / slug
+
+    # Create or update the symlink (use absolute path, not resolved,
+    # to preserve venv symlink chains)
+    target = Path(s) if Path(s).is_absolute() else Path(s).absolute()
+    if link.is_symlink():
+        if str(link.readlink()) == str(target):
+            return str(link)
+        link.unlink()
+    elif link.exists():
+        # Something unexpected at this path; leave it alone
+        return s
+
+    try:
+        link.symlink_to(target)
+        return str(link)
+    except OSError:
+        # Symlink creation failed (permissions, filesystem); fall back
+        return s
+
+
 def _handle_init(args: argparse.Namespace) -> None:
     """Set up .mcp.json in the project root for Claude Code integration."""
     from .incremental import find_repo_root
@@ -39,14 +77,17 @@ def _handle_init(args: argparse.Namespace) -> None:
         repo_root = Path.cwd()
 
     mcp_path = repo_root / ".mcp.json"
-    python_path = sys.executable
+
+    # Get space-safe paths for the MCP config
+    python_path = _safe_path(Path(sys.executable))
+    cwd_path = _safe_path(repo_root)
 
     mcp_config = {
         "mcpServers": {
             "code-review-graph": {
                 "command": python_path,
                 "args": ["-m", "code_review_graph.main"],
-                "cwd": ".",
+                "cwd": cwd_path,
             }
         }
     }
@@ -67,6 +108,8 @@ def _handle_init(args: argparse.Namespace) -> None:
     mcp_path.write_text(json.dumps(mcp_config, indent=2) + "\n")
     print(f"Created {mcp_path}")
     print(f"  Python: {python_path}")
+    if " " in str(repo_root):
+        print(f"  CWD:    {cwd_path} (symlink — spaces in original path)")
     print()
     print("Next steps:")
     print("  code-review-graph build    # build the knowledge graph")
