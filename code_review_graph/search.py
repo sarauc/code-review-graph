@@ -16,8 +16,6 @@ from .graph import GraphStore, _sanitize_name
 
 logger = logging.getLogger(__name__)
 
-logger = logging.getLogger(__name__)
-
 
 # ---------------------------------------------------------------------------
 # FTS5 index management
